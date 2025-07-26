@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+body {
+  font-family: 'IBM Plex Sans Asrabic', sans-serif;
+  background-color: var(--bg-color);
+display: flex;
+  flex-direction: column;
+  align-items: center; /* This centers child elements */
+  min-height: 100vh;
+  position: relative;
+}
