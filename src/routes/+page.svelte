@@ -1,28 +1,20 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { createClient } from '@supabase/supabase-js';
   import Header from '$lib/components/header.svelte';
-  import '../app.css';
+  import '../app.css'
 
-  // بيانات ثابتة للقصائد
-  let poems = [
-    {
-      slug: 'poem-1',
-      title: 'قصيدة 1',
-      counts: 10,
-      contents: 'هذا نص القصيدة الأولى',
-      excerpt: 'هذا نص القصيدة الأولى',
-      poet: { slug: 'poet-1', poet_name: 'الشاعر الأول' }
-    },
-    {
-      slug: 'poem-2',
-      title: 'قصيدة 2',
-      counts: 12,
-      contents: 'هذا نص القصيدة الثانية',
-      excerpt: 'هذا نص القصيدة الثانية',
-      poet: { slug: 'poet-2', poet_name: 'الشاعر الثاني' }
-    },
-    // أضف المزيد حسب الحاجة
-  ];
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+  if (typeof window !== 'undefined') {
+    window.supabase = supabase;
+  }
+
+  export let data;
+
+  let poems = data.poems;
   let query = '';
   let results = [];
   let loading = false;
@@ -32,8 +24,9 @@
 
   let currentPage = 1;
   const pageSize = 20;
+  let totalCount = 0;
 
-  // إعادة تعيين الصفحة وتأخير البحث عند الكتابة
+  // Reset page and debounce on new input
   function handleInput() {
     clearTimeout(searchTimeout);
 
@@ -54,36 +47,7 @@
     }, 300);
   }
 
-  // دالة البحث على المصفوفة المحلية
-  function search() {
-    loading = true;
-    error = '';
-
-    try {
-      const lowerQuery = query.trim().toLowerCase();
-      const words = lowerQuery.split(/\s+/);
-
-      results = poems.filter((poem) => {
-        const text = (poem.title + ' ' + (poem.contents || '')).toLowerCase();
-
-        if (selectedMatchType === 'exact') {
-          return text === lowerQuery;
-        } else if (selectedMatchType === 'all') {
-          return words.every(w => text.includes(w));
-        } else if (selectedMatchType === 'any') {
-          return words.some(w => text.includes(w));
-        }
-        return false;
-      });
-    } catch (e) {
-      error = 'حدث خطأ أثناء البحث';
-      results = [];
-    } finally {
-      loading = false;
-    }
-  }
-
-  // تمييز الكلمات المطابقة في النص
+  // Highlight matches
   function highlight(text: string | null | undefined, keyword: string): string {
     if (!text) return '';
     if (!keyword.trim()) return text;
@@ -98,27 +62,67 @@
     }
   }
 
-  // تنسيق مقتطف النص
+  // Format excerpt text
   function formatExcerpt(text: string, lineCount: number = 1): string {
     if (!text) return '';
     const replaced = text.trim().replace(/\*/g, ' — ');
     return `<span class="py-1">${replaced}</span>`;
   }
 
-  // بيانات العرض: إما نتائج البحث أو جميع القصائد
+  // Actual search call
+  async function search() {
+    if (!query.trim()) {
+      results = [];
+      return;
+    }
+
+    loading = true;
+    error = '';
+
+    try {
+      const { data: searchData, error: err } = await supabase.rpc('search_poems_1', {
+        query_text: query,
+        match_type: selectedMatchType,
+        page_number: currentPage
+      });
+
+      if (err) {
+        console.error('Supabase RPC error:', err);
+        error = err.message;
+      } else {
+        results = searchData || [];
+        // Optional: update totalCount if returned from Supabase
+        // totalCount = results[0]?.total_count || 0;
+      }
+    } catch (e) {
+      console.error('Exception during search:', e);
+      error = 'حدث خطأ في البحث';
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Trigger search when page changes during search
+  $: if (query.trim() && currentPage !== 1) {
+    search();
+  }
+
+  // Data to show (results from search or normal poems)
   $: displayedPoems = query.trim() ? results : poems;
 
-  // حساب عدد الصفحات حسب البحث أو جميع القصائد
-  $: totalPages = Math.ceil(displayedPoems.length / pageSize);
+  // Pagination count
+  $: totalPages = query.trim()
+    ? 1000 // arbitrary large number, or use real totalCount if returned
+    : Math.ceil(poems.length / pageSize);
 
-  // إحضار القصائد للصفحة المحددة
   function getCardsForPage(page: number) {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     return displayedPoems.slice(start, end);
   }
 
-  $: paginatedPoems = getCardsForPage(currentPage);
+  // Only apply pagination for non-search
+  $: paginatedPoems = query.trim() ? results : getCardsForPage(currentPage);
 
   function goToNextPage() {
     if (currentPage < totalPages) {
@@ -179,10 +183,6 @@
           <p class="card-excerpt" dir="rtl">
             {@html highlight(formatExcerpt(poem.excerpt || poem.contents, 1), query)}
           </p>
-        {:else}
-          <p class="card-excerpt" dir="rtl">
-            {@html poem.excerpt || poem.contents}
-          </p>
         {/if}
       </h3>
     </a>
@@ -190,30 +190,12 @@
 </div>
 
 <nav class="pagination-buttons">
-  <button on:click={goToPreviousPage} disabled={currentPage === 1}>السابق</button>
+  <a class="previous" on:click={goToPreviousPage} disabled={currentPage === 1}>السابق</a>
   <span class="pagename">صفحة {currentPage} من {totalPages}</span>
-  <button on:click={goToNextPage} disabled={currentPage === totalPages}>التالي</button>
+  <a class="next" on:click={goToNextPage} disabled={currentPage === totalPages}>التالي</a>
 </nav>
 
 <style>
-  .search-grid {
-    display: flex;
-    gap: 1rem;
-    margin: 1rem 0;
-    justify-content: center;
-  }
-
-  .searching {
-    flex: 1;
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
-
-  .match-type-select {
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
-
   .loading, .error, .no-results {
     text-align: center;
     padding: 20px;
@@ -233,22 +215,9 @@
     border-radius: 4px;
   }
 
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
-    gap: 1rem;
-  }
-
-  .pagination-buttons {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 1rem;
-    gap: 1rem;
-  }
-
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  @media (min-width: 768px) {
+    .card-excerpt {
+      max-width: 301px;
+    }
   }
 </style>
