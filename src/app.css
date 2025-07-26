@@ -5,11 +5,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 @theme {
   --bg-color: #fafafa;
-  --text-color: #000000;
-  --card-color: #f8f7f7;
-  --poem-color: #bababa;
-  --text3-color:#000000;
+  --text-color: #171717;
+  --card-color: #ffffff;
+  --poem-color: #ffffff;
+  --text3-color:#171717;
   --line-color:#cccccc;
+  --text2-color: #666666;
 
 
 }

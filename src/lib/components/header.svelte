@@ -16,7 +16,7 @@ header {
   display: flex;
   gap: 20px;
   list-style: none;
-  width: 100%;
+  width: 50%;
   height: 30px;
   direction: rtl;
   border-radius: 6px;
@@ -25,4 +25,5 @@ header {
   background-color: var(--bg-color);
   box-sizing: border-box;
 }
+
 </style>

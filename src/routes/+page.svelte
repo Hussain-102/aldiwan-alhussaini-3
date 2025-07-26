@@ -144,6 +144,7 @@
   <h1 class="main-title">الديـــوان الحسيني</h1>
 </div>
 
+
 <div class="search-grid">
   <input 
     class="searching"
@@ -190,9 +191,9 @@
 </div>
 
 <nav class="pagination-buttons">
-  <a class="previous" on:click={goToPreviousPage} disabled={currentPage === 1}>السابق</a>
-  <span class="pagename">صفحة {currentPage} من {totalPages}</span>
   <a class="next" on:click={goToNextPage} disabled={currentPage === totalPages}>التالي</a>
+  <span class="pagename">صفحة {currentPage} من {totalPages}</span>
+  <a class="previous" on:click={goToPreviousPage} disabled={currentPage === 1}>السابق</a>
 </nav>
 
 <style>
