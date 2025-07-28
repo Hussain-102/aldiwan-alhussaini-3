@@ -151,13 +151,13 @@ margin: 0 auto;
 /*Search + Grid Card*/
 
 .search-grid {
-  display:grid;
-  width: 100%;
-  justify-content: center;
-  justify-items: center;
-  margin: 0 auto;
-  overflow-x: hidden;
-
+    display: flex; /* Use flexbox for better alignment */
+    justify-content: center;
+    align-items: center; /* This vertically aligns the input and select */
+    gap: 0.5rem;
+    margin: 0 auto 1rem auto;
+    width: 90%;
+    max-width: 700px;
 }
 
 .searching{
@@ -174,6 +174,7 @@ margin: 0 auto;
   font-size: 18px;
   box-shadow: 0 1px 2px rgba(2, 2, 2, 0.11);
   transition: color 0.3s, box-shadow 0.3s;
+  flex-grow: 1;
 
 
 }
@@ -202,6 +203,7 @@ margin: 0 auto;
   position: relative; /* Needed for proper excerpt positioning */
   height: fit-content;
   min-height: 500px;
+
 }
 
 .grid-one-poets {
@@ -242,15 +244,13 @@ margin: 0 auto;
     width: 100%;
     min-width: 301px;
     align-items: center;
+    
     height: 96%;
     background: var(--card-color);
     box-shadow:rgba(36, 37, 38, 0.08) 0px 6px 15px 0px;   
     border: 1px solid rgba(128, 128, 128, 0.119); 
-    
-
-
-
   }
+  
 .card-name, card-name * {
   font-family: "IBM Plex Sans Arabic", sans-serif;
   font-size: 1.375rem;
@@ -427,11 +427,17 @@ margin: 0 auto;
   display: flex;
   margin-top: 10px;
   padding-top: 5px;
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-color);
   font-size: 0.9em;
-  background-color: var(--card-color);
-  color: var(--text3-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
   text-align: center;
+  width: 15px;
+  height: 30px;
+  justify-content: center;
+  align-items: center;
+  place-items: center;
 }
 
 .pagename {
@@ -453,6 +459,7 @@ margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
     }
 
   .next {
@@ -465,6 +472,8 @@ margin: 0 auto;
     display: flex;
     align-items: right;
     justify-content: right;
+    text-decoration: none;
+
   }
   .next:disabled {
     opacity: 0.2;
@@ -486,4 +495,6 @@ margin: 0 auto;
     display: flex;
     align-items: left;
     justify-content: left;
+    text-decoration: none;
+
   }
